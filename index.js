@@ -8,8 +8,8 @@ const MONGODB =
 // TypeDefs : GraphQL Type Definition
 // resolvers: How od we resolve queries / mutation
 
-const typeDefs = require("./graphql/typeDefs");
-const resolvers = require("./graphql/resolvers");
+const typeDefs = require("./typeDefs/typeDefs");
+const resolvers = require("./resolvers/resolvers");
 
 const server = new ApolloServer({
 	typeDefs,
