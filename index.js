@@ -1,27 +1,24 @@
 const { ApolloServer } = require("apollo-server");
-const mongoose = require("mongoose");
-
-const MONGODB =
-	"mongodb+srv://guchaneishvili:guchaneishvili@pulsarai.adr3zva.mongodb.net/?retryWrites=true&w=majority&appName=PulsarAI";
-
-// Apollo Server
-// TypeDefs : GraphQL Type Definition
-// resolvers: How od we resolve queries / mutation
-
 const typeDefs = require("./typeDefs/typeDefs");
 const resolvers = require("./resolvers/resolvers");
 
 const server = new ApolloServer({
 	typeDefs,
 	resolvers,
+	context: ({ req }) => {
+		const token = req.headers.authorization || "";
+		if (token) {
+			try {
+				const user = jwt.verify(token, secretKey);
+				return { user };
+			} catch (error) {
+				console.error("Invalid token:", error);
+			}
+		}
+		return {};
+	},
 });
 
-mongoose
-	.connect(MONGODB, { useNewUrlParser: true })
-	.then(() => {
-		console.log("MongoDB Connection Successfull");
-		return server.listen({ port: 5000 });
-	})
-	.then((res) => {
-		console.log(`Server running at ${res.url}`);
-	});
+server.listen({ port: 5000 }).then(({ url }) => {
+	console.log(`Server running at ${url}`);
+});
