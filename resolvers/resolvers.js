@@ -1,5 +1,6 @@
 const db = require("../database");
 const { generateToken, hashPassword, comparePasswords } = require("../auth");
+const jwt = require("jsonwebtoken");
 
 module.exports = {
 	Query: {
@@ -34,12 +35,42 @@ module.exports = {
 							reject(new Error("Invalid password"));
 						} else {
 							const token = generateToken(row);
-							resolve({ token });
+							resolve({
+								token,
+								id: row.id,
+								userName: row.userName,
+								firstName: row.firstName,
+								lastName: row.lastName,
+								createdAt: row.createdAt,
+							});
 						}
 					}
 				});
 			});
 		},
+
+		async refreshToken(_, { refreshToken }) {
+			return new Promise((resolve, reject) => {
+				try {
+					const decoded = jwt.verify(refreshToken, REFRESH_TOKEN_SECRET);
+					const userId = decoded.id;
+					const query = "SELECT * FROM Users WHERE _id = ?";
+					db.get(query, [userId], (err, row) => {
+						if (err) {
+							reject(err);
+						} else if (!row) {
+							reject(new Error("User not found"));
+						} else {
+							const token = generateToken(row);
+							resolve({ token });
+						}
+					});
+				} catch (error) {
+					reject(error);
+				}
+			});
+		},
+
 		async registerUser(
 			_,
 			{ userInput: { firstName, lastName, userName, password } }
@@ -64,7 +95,7 @@ module.exports = {
 									reject(err);
 								} else {
 									const newUser = {
-										id: this.lastID,
+										_id: this.lastID,
 										firstName,
 										lastName,
 										userName,
@@ -72,7 +103,16 @@ module.exports = {
 										createdAt,
 									};
 									const token = generateToken(newUser);
-									resolve({ token });
+									resolve({
+										token,
+										user: {
+											_id: this.lastID,
+											firstName,
+											lastName,
+											password: hashedPassword,
+											userName,
+										},
+									});
 								}
 							}
 						);

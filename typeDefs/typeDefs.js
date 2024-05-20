@@ -2,7 +2,7 @@ const { gql } = require("apollo-server");
 
 module.exports = gql`
 	type User {
-		_id: ID!
+		id: ID!
 		firstName: String
 		lastName: String
 		userName: String!
@@ -22,11 +22,26 @@ module.exports = gql`
 	}
 
 	type Mutation {
-		loginUser(userName: String!, password: String!): AuthPayload
-		registerUser(userInput: UserInput): AuthPayload!
+		loginUser(userName: String!, password: String!): LoginPayload
+		registerUser(userInput: UserInput): RegusterPayload!
+		refreshToken(refreshToken: String!): AuthPayload
 	}
 
 	type AuthPayload {
 		token: String!
+	}
+
+	type LoginPayload {
+		token: String!
+		id: ID!
+		userName: String!
+		firstName: String!
+		lastName: String!
+		createdAt: String!
+	}
+
+	type RegusterPayload {
+		token: String!
+		user: User!
 	}
 `;
