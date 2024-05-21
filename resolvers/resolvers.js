@@ -4,17 +4,40 @@ const jwt = require("jsonwebtoken");
 
 module.exports = {
 	Query: {
-		async getUsers(_, { amount }) {
-			return new Promise((resolve, reject) => {
-				const query = "SELECT * FROM Users ORDER BY createdAt DESC LIMIT ?";
-				db.all(query, [amount], (err, rows) => {
-					if (err) {
-						reject(err);
-					} else {
-						resolve(rows);
-					}
+		async getUsers(_, { page }) {
+			try {
+				const offset = (page - 1) * 10;
+				const query =
+					"SELECT * FROM Users ORDER BY createdAt DESC LIMIT ? OFFSET ?";
+				const rows = await new Promise((resolve, reject) => {
+					db.all(query, [10, offset], (err, rows) => {
+						if (err) {
+							reject(err);
+						} else {
+							console.log("rows", rows);
+							resolve(rows);
+						}
+					});
 				});
-			});
+
+				const nodes = rows.map((row) => ({
+					id: row.id,
+					firstName: row.firstName,
+					lastName: row.lastName,
+					userName: row.userName,
+					createdAt: row.createdAt,
+					signInCount: row.signInCount,
+				}));
+
+				const getUserList = {
+					nodes,
+				};
+
+				return getUserList;
+			} catch (err) {
+				console.error("Error fetching users:", err);
+				throw err;
+			}
 		},
 	},
 	Mutation: {
@@ -95,7 +118,7 @@ module.exports = {
 									reject(err);
 								} else {
 									const newUser = {
-										_id: this.lastID,
+										id: this.lastID,
 										firstName,
 										lastName,
 										userName,
@@ -106,7 +129,7 @@ module.exports = {
 									resolve({
 										token,
 										user: {
-											_id: this.lastID,
+											id: this.lastID,
 											firstName,
 											lastName,
 											password: hashedPassword,

@@ -10,6 +10,19 @@ module.exports = gql`
 		createdAt: String!
 	}
 
+	type GetUserList {
+		nodes: [GetUsersPayload!]!
+	}
+
+	type GetUsersPayload {
+		id: ID!
+		firstName: String
+		lastName: String
+		userName: String!
+		createdAt: String!
+		signInCount: Int!
+	}
+
 	input UserInput {
 		firstName: String
 		lastName: String
@@ -18,7 +31,7 @@ module.exports = gql`
 	}
 
 	type Query {
-		getUsers(amount: Int): [User]
+		getUsers(page: Int!): GetUserList!
 	}
 
 	type Mutation {

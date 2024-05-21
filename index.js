@@ -8,17 +8,37 @@ const secretKey =
 const server = new ApolloServer({
 	typeDefs,
 	resolvers,
-	context: ({ req }) => {
-		const token = req.headers.authorization || "";
-		if (token) {
-			try {
-				const user = jwt.verify(token, secretKey);
-				return { user };
-			} catch (error) {
-				console.error("Invalid token:", error);
+	context: async ({ req }) => {
+		try {
+			const token = req.headers.authorization;
+
+			if (!token) {
+				return {};
 			}
+			let payload;
+			try {
+				payload = jwt.verify(token, secretKey);
+				console.log(payload);
+			} catch (err) {
+				console.error("error", err);
+				return {};
+			}
+
+			// const decoded = await new Promise((resolve, reject) => {
+			// 	jwt.verify(token, secretKey, (error, decodedToken) => {
+			// 		if (error) {
+			// 			reject(error);
+			// 		} else {
+			// 			resolve(decodedToken);
+			// 		}
+			// 	});
+			// });
+
+			return { user: payload };
+		} catch (error) {
+			console.error("Error verifying token:", error);
+			throw error;
 		}
-		return {};
 	},
 });
 

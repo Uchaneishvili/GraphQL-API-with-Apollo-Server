@@ -1,8 +1,7 @@
 const jwt = require("jsonwebtoken");
 const bcrypt = require("bcryptjs");
 
-const secretKey =
-	"c9b8e7c3c9e8d7c2c6d5b4a3928170685f4e3d2c1b0a09786756453412101f0e";
+const secretKey = "my-32-character-ultra-secure-and-ultra-long-secret";
 
 const generateToken = (user) => {
 	return jwt.sign({ userId: user._id, userName: user.userName }, secretKey, {
