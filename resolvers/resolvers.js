@@ -20,6 +20,17 @@ module.exports = {
 					});
 				});
 
+				const countQuery = "SELECT COUNT(*) as totalCount FROM Users";
+				const totalCount = await new Promise((resolve, reject) => {
+					db.get(countQuery, (err, row) => {
+						if (err) {
+							reject(err);
+						} else {
+							resolve(row.totalCount);
+						}
+					});
+				});
+
 				const nodes = rows.map((row) => ({
 					id: row.id,
 					firstName: row.firstName,
@@ -31,6 +42,7 @@ module.exports = {
 
 				const getUserList = {
 					nodes,
+					totalCount,
 				};
 
 				return getUserList;
