@@ -21,7 +21,7 @@ module.exports = gql`
 		lastName: String
 		userName: String!
 		createdAt: String!
-		signInCount: Int!
+		successedSignInCount: Int!
 	}
 
 	input UserInput {
@@ -52,6 +52,7 @@ module.exports = gql`
 		firstName: String!
 		lastName: String!
 		createdAt: String!
+		successedSignInCount: Int!
 	}
 
 	type RegusterPayload {

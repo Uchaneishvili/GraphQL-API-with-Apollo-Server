@@ -39,7 +39,7 @@ module.exports = {
 					lastName: row.lastName,
 					userName: row.userName,
 					createdAt: row.createdAt,
-					signInCount: row.signInCount,
+					successedSignInCount: row.successedSignInCount,
 				}));
 
 				const getUserList = {
@@ -70,31 +70,52 @@ module.exports = {
 					});
 				});
 
-				const updateQuery =
-					"UPDATE Users SET signInCount = signInCount + 1 WHERE id = ?";
-				await new Promise((resolve, reject) => {
-					db.run(updateQuery, [user.id], (err) => {
-						if (err) {
-							reject(
-								new ApolloError(`Error updating login attempts: ${err.message}`)
-							);
-						} else {
-							resolve();
-						}
-					});
-				});
-
-				// Check if the maximum number of login attempts has been reached
 				if (user.signInCount >= MAX_LOGIN_ATTEMPTS) {
 					throw new ApolloError("MAXIMUM_LOGIN_ATTEMPTS_REACHED");
 				}
 
 				const isPasswordValid = await comparePasswords(password, user.password);
+
 				if (!isPasswordValid) {
-					throw new ApolloError("INVALID_PASSWORD");
+					const updateQuery = `UPDATE Users SET signInCount = signInCount + 1 WHERE id = ?; `;
+
+					await new Promise((resolve, reject) => {
+						db.run(updateQuery, [user.id], (err) => {
+							if (err) {
+								reject(
+									new ApolloError(
+										`Error updating login attempts: ${err.message}`
+									)
+								);
+							} else {
+								resolve();
+							}
+						});
+					}).then(() => {
+						throw new ApolloError("INVALID_PASSWORD");
+					});
 				}
 
 				const token = generateToken(user);
+
+				const updateQuery = `UPDATE Users SET successedSignInCount = successedSignInCount + 1, signInCount = 0 WHERE id = ?; `;
+
+				if (token) {
+					await new Promise((resolve, reject) => {
+						db.run(updateQuery, [user.id], (err) => {
+							if (err) {
+								reject(
+									new ApolloError(
+										`Error updating login attempts: ${err.message}`
+									)
+								);
+							} else {
+								resolve();
+							}
+						});
+					});
+				}
+
 				return {
 					token,
 					id: user.id,
@@ -102,6 +123,7 @@ module.exports = {
 					firstName: user.firstName,
 					lastName: user.lastName,
 					createdAt: user.createdAt,
+					successedSignInCount: user.successedSignInCount,
 				};
 			} catch (error) {
 				throw new ApolloError(

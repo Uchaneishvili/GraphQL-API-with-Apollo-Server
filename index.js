@@ -24,16 +24,6 @@ const server = new ApolloServer({
 				return {};
 			}
 
-			// const decoded = await new Promise((resolve, reject) => {
-			// 	jwt.verify(token, secretKey, (error, decodedToken) => {
-			// 		if (error) {
-			// 			reject(error);
-			// 		} else {
-			// 			resolve(decodedToken);
-			// 		}
-			// 	});
-			// });
-
 			return { user: payload };
 		} catch (error) {
 			console.error("Error verifying token:", error);

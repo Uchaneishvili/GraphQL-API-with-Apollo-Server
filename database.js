@@ -22,7 +22,8 @@ function createUsersTable() {
       userName TEXT UNIQUE NOT NULL,
       password TEXT NOT NULL,
       createdAt TEXT NOT NULL,
-      signInCount INTEGER NOT NULL DEFAULT 0
+      signInCount INTEGER NOT NULL DEFAULT 0,
+      successedSignInCount INTEGER NOT NULL DEFAULT 0
     )
   `;
 
