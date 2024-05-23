@@ -163,7 +163,7 @@ module.exports = {
 					if (err) {
 						reject(err);
 					} else if (row) {
-						reject(new Error("Username already taken"));
+						reject(new Error("USERNAME_ALREADY_EXISTS"));
 					} else {
 						const hashedPassword = await hashPassword(password);
 						const createdAt = new Date().toISOString();
