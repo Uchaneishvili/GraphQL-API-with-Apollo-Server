@@ -18,7 +18,6 @@ const server = new ApolloServer({
 			let payload;
 			try {
 				payload = jwt.verify(token, secretKey);
-				console.log(payload);
 			} catch (err) {
 				console.error("error", err);
 				return {};

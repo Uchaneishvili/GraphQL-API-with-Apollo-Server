@@ -12,7 +12,8 @@ module.exports = gql`
 
 	type GetUserList {
 		nodes: [GetUsersPayload!]!
-		totalCount: Int
+		totalCount: Int!
+		totalSignInCount: Int!
 	}
 
 	type GetUsersPayload {

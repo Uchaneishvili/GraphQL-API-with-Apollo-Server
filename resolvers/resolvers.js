@@ -9,11 +9,11 @@ module.exports = {
 	Query: {
 		async getUsers(_, { page }) {
 			try {
-				const offset = (page - 1) * 10;
+				const offset = (page - 1) * 5;
 				const query =
 					"SELECT * FROM Users ORDER BY createdAt DESC LIMIT ? OFFSET ?";
 				const rows = await new Promise((resolve, reject) => {
-					db.all(query, [10, offset], (err, rows) => {
+					db.all(query, [5, offset], (err, rows) => {
 						if (err) {
 							reject(err);
 						} else {
@@ -42,9 +42,21 @@ module.exports = {
 					successedSignInCount: row.successedSignInCount,
 				}));
 
+				const signCountQuery = "SELECT * FROM Users ORDER BY createdAt DESC";
+				const totalSignInCount = await new Promise((resolve, reject) => {
+					db.all(signCountQuery, (err, count) => {
+						if (err) {
+							reject(err);
+						} else {
+							resolve(count.length);
+						}
+					});
+				});
+
 				const getUserList = {
 					nodes,
 					totalCount,
+					totalSignInCount,
 				};
 
 				return getUserList;
