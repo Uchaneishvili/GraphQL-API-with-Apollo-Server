@@ -42,13 +42,14 @@ module.exports = {
 					successedSignInCount: row.successedSignInCount,
 				}));
 
-				const signCountQuery = "SELECT * FROM Users ORDER BY createdAt DESC";
+				const signCountQuery =
+					"SELECT SUM(successedSignInCount) as sum FROM Users";
 				const totalSignInCount = await new Promise((resolve, reject) => {
-					db.all(signCountQuery, (err, count) => {
+					db.get(signCountQuery, (err, count) => {
 						if (err) {
 							reject(err);
 						} else {
-							resolve(count.length);
+							resolve(count.sum);
 						}
 					});
 				});
