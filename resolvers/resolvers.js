@@ -1,6 +1,9 @@
 const db = require("../database");
 const { generateToken, hashPassword, comparePasswords } = require("../auth");
 const jwt = require("jsonwebtoken");
+const { ApolloError } = require("apollo-server");
+
+const MAX_LOGIN_ATTEMPTS = 5; // Set the maximum number of allowed login attempts
 
 module.exports = {
 	Query: {
@@ -14,7 +17,6 @@ module.exports = {
 						if (err) {
 							reject(err);
 						} else {
-							console.log("rows", rows);
 							resolve(rows);
 						}
 					});
@@ -54,36 +56,59 @@ module.exports = {
 	},
 	Mutation: {
 		async loginUser(_, { userName, password }) {
-			return new Promise((resolve, reject) => {
-				const query = "SELECT * FROM Users WHERE userName = ?";
-				db.get(query, [userName], async (err, row) => {
-					if (err) {
-						reject(err);
-					} else if (!row) {
-						reject(new Error("User not found"));
-					} else {
-						const isPasswordValid = await comparePasswords(
-							password,
-							row.password
-						);
-						if (!isPasswordValid) {
-							reject(new Error("Invalid password"));
+			try {
+				const user = await new Promise((resolve, reject) => {
+					const query = "SELECT * FROM Users WHERE userName = ?";
+					db.get(query, [userName], (err, user) => {
+						if (err) {
+							reject(err);
+						} else if (!user) {
+							reject(new ApolloError("User not found"));
 						} else {
-							const token = generateToken(row);
-							resolve({
-								token,
-								id: row.id,
-								userName: row.userName,
-								firstName: row.firstName,
-								lastName: row.lastName,
-								createdAt: row.createdAt,
-							});
+							resolve(user);
 						}
-					}
+					});
 				});
-			});
-		},
 
+				const updateQuery =
+					"UPDATE Users SET signInCount = signInCount + 1 WHERE id = ?";
+				await new Promise((resolve, reject) => {
+					db.run(updateQuery, [user.id], (err) => {
+						if (err) {
+							reject(
+								new ApolloError(`Error updating login attempts: ${err.message}`)
+							);
+						} else {
+							resolve();
+						}
+					});
+				});
+
+				// Check if the maximum number of login attempts has been reached
+				if (user.signInCount >= MAX_LOGIN_ATTEMPTS) {
+					throw new ApolloError("MAXIMUM_LOGIN_ATTEMPTS_REACHED");
+				}
+
+				const isPasswordValid = await comparePasswords(password, user.password);
+				if (!isPasswordValid) {
+					throw new ApolloError("INVALID_PASSWORD");
+				}
+
+				const token = generateToken(user);
+				return {
+					token,
+					id: user.id,
+					userName: user.userName,
+					firstName: user.firstName,
+					lastName: user.lastName,
+					createdAt: user.createdAt,
+				};
+			} catch (error) {
+				throw new ApolloError(
+					`Error occurred while logging in user:, ${error}`
+				);
+			}
+		},
 		async refreshToken(_, { refreshToken }) {
 			return new Promise((resolve, reject) => {
 				try {
