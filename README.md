@@ -27,7 +27,7 @@ git clone https://github.com/Uchaneishvili/GraphQL-API-with-Apollo-Server.git
 2. Navigate to the project directory:
 
 ```bash
-cd GraphQL-API-with-Apollo-Serve
+cd GraphQL-API-with-Apollo-Server
 ```
 
 3. Install the dependencies:
