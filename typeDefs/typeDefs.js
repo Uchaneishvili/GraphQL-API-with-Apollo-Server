@@ -60,4 +60,8 @@ module.exports = gql`
 		token: String!
 		user: User!
 	}
+
+	type Subscription {
+		userDetailsUpdated(id: ID!): User
+	}
 `;
