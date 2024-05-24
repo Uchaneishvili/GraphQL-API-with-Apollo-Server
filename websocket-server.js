@@ -44,7 +44,6 @@ wss.on("connection", (ws) => {
 			// Send the data to all connected WebSocket clients
 			wss.clients.forEach((ws) => {
 				if (ws.readyState === WebSocket.OPEN) {
-					console.log("12333");
 					ws.send(JSON.stringify(data));
 				}
 			});
