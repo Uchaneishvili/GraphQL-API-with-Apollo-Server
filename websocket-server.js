@@ -1,5 +1,6 @@
 const WebSocket = require("ws");
 const db = require("./database");
+const logger = require("./utils/logger");
 
 const wss = new WebSocket.Server({ port: 8080 });
 
