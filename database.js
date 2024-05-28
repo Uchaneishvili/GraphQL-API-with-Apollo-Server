@@ -1,13 +1,13 @@
 const sqlite3 = require("sqlite3").verbose();
 const path = require("path");
-
+const logger = require("./utils/logger");
 const db = new sqlite3.Database(
 	path.join(__dirname, "database.sqlite"),
 	(err) => {
 		if (err) {
-			console.error("Error creating SQLite database:", err.message);
+			logger.error("Error connecting to SQLite database:", err.message);
 		} else {
-			console.log("SQLite database created successfully.");
+			logger.info("SQLite database created successfully.");
 			createUsersTable();
 		}
 	}
@@ -29,9 +29,9 @@ function createUsersTable() {
 
 	db.run(createTableQuery, (err) => {
 		if (err) {
-			console.error("Error creating Users table:", err.message);
+			logger.error("Error creating Users table:", err.message);
 		} else {
-			console.log("Users table created successfully.");
+			logger.info("Users table created successfully.");
 		}
 	});
 }

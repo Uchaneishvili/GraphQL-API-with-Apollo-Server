@@ -1,21 +1,17 @@
 const WebSocket = require("ws");
 const db = require("./database");
 
-// Create a new WebSocket server
 const wss = new WebSocket.Server({ port: 8080 });
 
-// Handle WebSocket connections
 wss.on("connection", (ws) => {
-	console.log("Client connected");
+	logger.info("Client connected");
 
-	// Handle incoming messages
 	ws.on("message", (message) => {
-		console.log("Received message:", message);
+		logger.info("Received message:", message);
 	});
 
-	// Handle WebSocket close
 	ws.on("close", () => {
-		console.log("Client disconnected");
+		logger.info("Client disconnected");
 	});
 
 	// Send a message to the client every 5 seconds
@@ -25,7 +21,7 @@ wss.on("connection", (ws) => {
 		db.all(query, (err, rows) => {
 			query;
 			if (err) {
-				console.error("Error fetching users:", err);
+				logger.error("Error fetching users:", err);
 				return;
 			}
 
@@ -41,7 +37,6 @@ wss.on("connection", (ws) => {
 				users,
 			};
 
-			// Send the data to all connected WebSocket clients
 			wss.clients.forEach((ws) => {
 				if (ws.readyState === WebSocket.OPEN) {
 					ws.send(JSON.stringify(data));
@@ -50,10 +45,9 @@ wss.on("connection", (ws) => {
 		});
 	}, 5000);
 
-	// Clean up the interval when the WebSocket connection is closed
 	ws.on("close", () => {
 		clearInterval(intervalId);
 	});
 });
 
-console.log("WebSocket server is running on port 8080");
+logger.info("WebSocket server is running on port 8080");

@@ -1,36 +1,35 @@
-const { ApolloServer } = require("apollo-server");
+const { ApolloServer, ApolloError } = require("apollo-server");
 const typeDefs = require("./typeDefs/typeDefs");
 const resolvers = require("./resolvers/resolvers");
 const jwt = require("jsonwebtoken");
-const secretKey =
-	"9d8e7d92b0f74c3c8d6d7a9e4f1b2c3d4e5f6a7b8c9d0e1f2a3b4c5d6e7f";
+const logger = require("./utils/logger");
+require("dotenv").config();
 
 const server = new ApolloServer({
 	typeDefs,
 	resolvers,
 	context: async ({ req }) => {
+		const tokenString = req.headers.authorization || "";
+		const token = tokenString.split(" ")[1];
+
+		if (!token) {
+			return {};
+		}
 		try {
-			const token = req.headers.authorization;
-
-			if (!token) {
-				return {};
-			}
-			let payload;
-			try {
-				payload = jwt.verify(token, secretKey);
-			} catch (err) {
-				console.error("error", err);
-				return {};
-			}
-
-			return { user: payload };
+			const decodedToken = jwt.verify(token, process.env.TOKEN_SECRET_KEY);
+			return { user: decodedToken, token: token };
 		} catch (error) {
-			console.error("Error verifying token:", error);
-			throw error;
+			throw new ApolloError("Authentication failed", "UNAUTHENTICATED");
 		}
 	},
 });
 
-server.listen({ port: 5000 }).then(({ url }) => {
-	console.log(`Server running at ${url}`);
-});
+server
+	.listen({ port: "5000" })
+	.then(({ url }) => {
+		logger.info(`Server running at ${url}`);
+	})
+	.catch((err) => {
+		logger.error("Failed to start server:", err);
+		process.exit(1);
+	});

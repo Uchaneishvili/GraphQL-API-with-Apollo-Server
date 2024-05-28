@@ -2,12 +2,12 @@ const db = require("../database");
 const { generateToken, hashPassword, comparePasswords } = require("../auth");
 const jwt = require("jsonwebtoken");
 const { ApolloError } = require("apollo-server");
+const authenticateUser = require("../utils/authUtils");
 
 const MAX_LOGIN_ATTEMPTS = 5;
-
 module.exports = {
 	Query: {
-		async getUsers(_, { page }) {
+		getUsers: authenticateUser()(async (_, { page }) => {
 			try {
 				const offset = (page - 1) * 5;
 				const query =
@@ -62,13 +62,12 @@ module.exports = {
 
 				return getUserList;
 			} catch (err) {
-				console.error("Error fetching users:", err);
-				throw err;
+				throw new ApolloError("Error fetching users:", err);
 			}
-		},
+		}),
 	},
 	Mutation: {
-		async loginUser(_, { userName, password }) {
+		loginUser: async (_, { userName, password }) => {
 			try {
 				const user = await new Promise((resolve, reject) => {
 					const query = "SELECT * FROM Users WHERE userName = ?";
@@ -90,7 +89,7 @@ module.exports = {
 				const isPasswordValid = await comparePasswords(password, user.password);
 
 				if (!isPasswordValid) {
-					const updateQuery = `UPDATE Users SET signInCount = signInCount + 1 WHERE id = ?; `;
+					const updateQuery = `UPDATE Users SET signInCount = signInCount + 1 WHERE id = ?;`;
 
 					await new Promise((resolve, reject) => {
 						db.run(updateQuery, [user.id], (err) => {
@@ -111,7 +110,7 @@ module.exports = {
 
 				const token = generateToken(user);
 
-				const updateQuery = `UPDATE Users SET successedSignInCount = successedSignInCount + 1, signInCount = 0 WHERE id = ?; `;
+				const updateQuery = `UPDATE Users SET successedSignInCount = successedSignInCount + 1, signInCount = 0 WHERE id = ?;`;
 
 				if (token) {
 					await new Promise((resolve, reject) => {
@@ -139,15 +138,16 @@ module.exports = {
 					successedSignInCount: user.successedSignInCount,
 				};
 			} catch (error) {
-				throw new ApolloError(
-					`Error occurred while logging in user:, ${error}`
-				);
+				throw new ApolloError(`Error occurred while logging in user: ${error}`);
 			}
 		},
-		async refreshToken(_, { refreshToken }) {
+		refreshToken: async (_, { refreshToken }) => {
 			return new Promise((resolve, reject) => {
 				try {
-					const decoded = jwt.verify(refreshToken, REFRESH_TOKEN_SECRET);
+					const decoded = jwt.verify(
+						refreshToken,
+						process.env.REFRESH_TOKEN_SECRET
+					);
 					const userId = decoded.id;
 					const query = "SELECT * FROM Users WHERE _id = ?";
 					db.get(query, [userId], (err, row) => {
@@ -165,7 +165,6 @@ module.exports = {
 				}
 			});
 		},
-
 		async registerUser(
 			_,
 			{ userInput: { firstName, lastName, userName, password } }

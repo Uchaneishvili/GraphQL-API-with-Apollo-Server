@@ -1,12 +1,14 @@
 const jwt = require("jsonwebtoken");
 const bcrypt = require("bcryptjs");
 
-const secretKey = "my-32-character-ultra-secure-and-ultra-long-secret";
-
 const generateToken = (user) => {
-	return jwt.sign({ userId: user._id, userName: user.userName }, secretKey, {
-		expiresIn: "1h",
-	});
+	return jwt.sign(
+		{ userId: user._id, userName: user.userName },
+		process.env.TOKEN_SECRET_KEY,
+		{
+			expiresIn: "24h",
+		}
+	);
 };
 
 const hashPassword = async (password) => {
