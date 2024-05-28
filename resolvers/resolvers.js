@@ -3,7 +3,7 @@ const { generateToken, hashPassword, comparePasswords } = require("../auth");
 const jwt = require("jsonwebtoken");
 const { ApolloError } = require("apollo-server");
 
-const MAX_LOGIN_ATTEMPTS = 5; // Set the maximum number of allowed login attempts
+const MAX_LOGIN_ATTEMPTS = 5;
 
 module.exports = {
 	Query: {
